@@ -1,17 +1,18 @@
 package org.idio.wikipedia.word2vec
-import org.idio.wikipedia.redirects.RedirectStore
+
 import java.util.regex.Matcher.quoteReplacement
-import scala.util.matching.Regex
+
+import org.idio.wikipedia.redirects.RedirectStore
 
 object ArticleCleaner {
 
-  /*
-  *  Parses a WikiLink in MediaWiki's format
-  *  Returns a pair (Surface Form, DbpediaID)
-  * */
-  def parseWikimediaLink(matchedLink:String): (String,String) ={
+  /**
+   * Parses a WikiLink in MediaWiki's format
+   * Returns a pair (Surface Form, DbpediaID)
+   */
+  def parseWikimediaLink(matchedLink: String): (String, String) = {
 
-    val split = matchedLink.replace("""[[""", "").replace("""]]""","").split("""\|""").toList
+    val split = matchedLink.replace( """[[""", "").replace( """]]""", "").split( """\|""").toList
 
     // [[ Dbpedia Title]]
     if (split.length == 1) {
@@ -19,7 +20,7 @@ object ArticleCleaner {
       val dbpediaId = surfaceForm.replace(" ", "_")
       (surfaceForm, dbpediaId)
     }
-    else{
+    else {
       // [[Dbpedia Title | anchor]]
       val surfaceForm = split.toList.last.trim()
       val dbpediaId = split(0).trim().replace(" ", "_")
@@ -28,42 +29,42 @@ object ArticleCleaner {
 
   }
 
-  /*
-  * Given a wikimedia article's text
-  * It replaces all intra-wiki links ( [[Dbpedia Title]] and [[Dbpedia Title|Anchor]]) in Text
-  * for :  processLink(processedDbpediaTitle, AnchorText)
-  * */
-  def replaceLinks(text:String, processLink: (String, String) => String, redirectStore: RedirectStore): String ={
+  /**
+   * Given a wikimedia article's text
+   * It replaces all intra-wiki links ( `[[Dbpedia Title]]` and `[[Dbpedia Title|Anchor]]`) in Text
+   * for :  processLink(processedDbpediaTitle, AnchorText)
+   */
+  def replaceLinks(text: String, processLink: (String, String) => String, redirectStore: RedirectStore): String = {
 
     // regex to find links to other wiki articles
     val linksRegex = """\[\[([^:\[\]])+\]\]""".r
 
-      linksRegex.replaceAllIn(quoteReplacement(text), linkMatch => {
-        try {
-          val (surfaceForm, dbpediaId) = parseWikimediaLink(linkMatch.toString())
-          val canonicalDbpediaId = redirectStore.getCanonicalId(dbpediaId)
-          processLink(surfaceForm, canonicalDbpediaId)
-        } catch {
-          case _ => {
-            println("error with link: " + linkMatch.toString())
-            ""
-          }
+    linksRegex.replaceAllIn(quoteReplacement(text), linkMatch => {
+      try {
+        val (surfaceForm, dbpediaId) = parseWikimediaLink(linkMatch.toString())
+        val canonicalDbpediaId = redirectStore.getCanonicalId(dbpediaId)
+        processLink(surfaceForm, canonicalDbpediaId)
+      } catch {
+        case _ => {
+          println("error with link: " + linkMatch.toString())
+          ""
         }
-      })
+      }
+    })
 
   }
 
-  /*
-  * Given a wikimedia article's text
-  * Cleans links to external sources
-  * */
-  def cleanCurlyBraces(text:String): String ={
+  /**
+   * Given a wikimedia article's text
+   * Cleans links to external sources
+   */
+  def cleanCurlyBraces(text: String): String = {
     // regex to find external links
     val curlyBracesRegex = """\{\{([^:\[\]])+\}\}""".r
     curlyBracesRegex.replaceAllIn(text, "")
   }
 
-  def cleanStyle(text:String):String ={
+  def cleanStyle(text: String): String = {
     // clean css style encoded as: {| class "wikitable" style "float: right; margin-left: 1em;"
     val styleRegex = """\{\|.*\|\}""".r
     styleRegex.replaceAllIn(text, "")
