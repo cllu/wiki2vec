@@ -1,8 +1,3 @@
-#!/bin/bash
-#+------------------------------------------------------------------------------------------------------------------------------+
-#| Idio Wiki2Vec                                                                      |                                                                                                     |
-#+------------------------------------------------------------------------------------------------------------------------------+
-
 # Creates Wiki2Vec corpora out of a wikipedia dump
 
 # $1 Locale (en_US)
@@ -36,9 +31,9 @@ READABLEWIKI="$TARGET_DIR/${LANGUAGE}wiki-latest.lines"
 SPLIT_OUTPUT_CORPUS="$WDIR/${LANGUAGE}wiki"
 OUTPUTCORPUS="$TARGET_DIR/${LANGUAGE}wiki.corpus"
 
-if [ ! -z "$3" ]; then 
+if [ ! -z "$3" ]; then
 	STEMMERNAME="$3"
-else 
+else
 	STEMMERNAME="$LANGUAGE"
 fi
 
@@ -46,24 +41,9 @@ echo "Language: $LANGUAGE"
 echo "Working directory: $WDIR"
 
 
-apt-get update
-
-# Installing Java
-add-apt-repository ppa:webupd8team/java
-
-# Installing SBT
-echo "deb http://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list
-
-apt-get update
-apt-get install unzip oracle-java7-installer sbt
-
-
 mkdir -p $WDIR
 cd $WDIR
 
-echo "Downloading Wikipedia Dump"
-curl -O "http://dumps.wikimedia.org/${LANGUAGE}wiki/latest/${LANGUAGE}wiki-latest-pages-articles-multistream.xml.bz2"
-WIKIPEDIA_PATH="$WDIR/${LANGUAGE}wiki-latest-pages-articles-multistream.xml.bz2"
 
 echo "Downloading Apache Spark"
 curl "http://d3kbcqa49mib13.cloudfront.net/spark-1.2.0-bin-hadoop2.4.tgz" | tar xvz

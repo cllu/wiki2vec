@@ -39,17 +39,15 @@ class Word2VecCorpus(pathToReadableWiki: String, redirectStore: RedirectStore, p
         val articleText = splitLine(1)
         (wikiTitle, articleText)
       } catch {
-        case _ => ("", "")
+        case _: Exception => ("", "")
       }
     }
   }
-
 
   /*
   *  Clean the articles (wikimedia markup)
   * */
   private def cleanArticles(titleArticleText: RDD[(String, String)]) = {
-
 
     titleArticleText.map {
       case (title, text) =>
@@ -101,7 +99,6 @@ class Word2VecCorpus(pathToReadableWiki: String, redirectStore: RedirectStore, p
     }
   }
 
-
   /**
    * Dumb Tokenization.
    * Replace this for something smarter
@@ -116,14 +113,11 @@ class Word2VecCorpus(pathToReadableWiki: String, redirectStore: RedirectStore, p
         val stemmer = try {
           new SnowballStemmer(language_local)
         } catch {
-          case _ => new NoStemmer()
+          case _: Exception => new NoStemmer()
         }
         line.split("\\s").map {
-          word =>
-            word match {
-              case w if w.startsWith(prefix) => w
-              case _ => stemmer.stem(word.toLowerCase.replace(",", "").replace(".", "").replace("“", "").replace("\\", "").replace("[", "").replace("]", "").replace("‘", ""))
-            }
+          case w if w.startsWith(prefix) => w
+          case word => stemmer.stem(word.toLowerCase.replace(",", "").replace(".", "").replace("“", "").replace("\\", "").replace("[", "").replace("]", "").replace("‘", ""))
         }.mkString(" ")
     }
     tokenizedLines
@@ -137,7 +131,6 @@ class Word2VecCorpus(pathToReadableWiki: String, redirectStore: RedirectStore, p
   }
 }
 
-
 object Word2VecCorpus {
 
   def main(args: Array[String]): Unit = {
@@ -147,10 +140,9 @@ object Word2VecCorpus {
     val language = try {
       args(3)
     } catch {
-      case _ => {
+      case _: Exception =>
         println("Warning: Stemming is deactivated..")
         "NoStemmer"
-      }
     }
 
     println("Path to Readable Wikipedia: " + pathToReadableWikipedia)
@@ -164,16 +156,14 @@ object Word2VecCorpus {
 
     implicit val sc: SparkContext = new SparkContext(conf)
 
-
     val redirectStore = try {
       val redirects = new MapRedirectStore(pathToRedirects)
       redirects
     } catch {
-      case e: Exception => {
+      case e: Exception =>
         e.printStackTrace()
         println("using empty redirect store..")
         new EmptyRedirectStore(pathToRedirects)
-      }
     }
 
     val word2vecCorpusCreator = new Word2VecCorpus(pathToReadableWikipedia, redirectStore, pathToOutput, language)

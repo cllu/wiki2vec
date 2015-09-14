@@ -128,7 +128,7 @@ public abstract class WikipediaPage {
     return this.language;
   }
 
-  // Explictly remove <ref>...</ref>, because there are screwy things like this:
+  // Explicitly remove <ref>...</ref>, because there are screwy things like this:
   // <ref>[http://www.interieur.org/<!-- Bot generated title -->]</ref>
   // where "http://www.interieur.org/<!--" gets interpreted as the URL by
   // Bliki in conversion to text

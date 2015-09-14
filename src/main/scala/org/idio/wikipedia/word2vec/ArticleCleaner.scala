@@ -30,7 +30,7 @@ object ArticleCleaner {
   }
 
   /**
-   * Given a wikimedia article's text
+   * Given a MediaWiki article's text
    * It replaces all intra-wiki links ( `[[Dbpedia Title]]` and `[[Dbpedia Title|Anchor]]`) in Text
    * for :  processLink(processedDbpediaTitle, AnchorText)
    */
@@ -45,17 +45,16 @@ object ArticleCleaner {
         val canonicalDbpediaId = redirectStore.getCanonicalId(dbpediaId)
         processLink(surfaceForm, canonicalDbpediaId)
       } catch {
-        case _ => {
+        case _: Exception =>
           println("error with link: " + linkMatch.toString())
           ""
-        }
       }
     })
 
   }
 
   /**
-   * Given a wikimedia article's text
+   * Given a MediaWiki article's text
    * Cleans links to external sources
    */
   def cleanCurlyBraces(text: String): String = {
