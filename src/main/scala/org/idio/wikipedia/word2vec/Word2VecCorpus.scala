@@ -8,7 +8,7 @@ import org.idio.wikipedia.utils.{NoStemmer, SnowballStemmer}
 
 /**
  * Creates a corpus which can feed to word2vec
- * to extract vectors for each wikipedia Topic.
+ * to extract vectors for each wikipedia topic.
  *
  * It assumes a "ReadableWikipedia " dump is fed.
  * A Readable Wikipedia dump is defined as one in which every line in the file follows:
@@ -16,27 +16,28 @@ import org.idio.wikipedia.utils.{NoStemmer, SnowballStemmer}
  */
 class Word2VecCorpus(pathToReadableWiki: String, redirectStore: RedirectStore, pathToOutput: String, language: String)(implicit val sc: SparkContext) {
 
-  private val PREFIX = "DBPEDIA_ID/"
+  private val PREFIX = "w:"
 
   // RDD of a readableWikipedia where each line follows the format :
-  //  article Title <tab> article text
+  // id title redirect text (separated by TAB)
   private val readableWikipedia = sc.textFile(pathToReadableWiki)
 
-  // RDD (WikiTitle, Article Text)
+  // RDD (title, text)
   private val wikiTitleTexts = getPairRDD(readableWikipedia)
 
   private val redirectStoreBC = sc.broadcast(redirectStore)
 
   /**
-   * Returns a PairRDD (WikiTitle, ArticleText)
+   * Returns a PairRDD (title, text)
    * Out of a readable wikipedia
    */
   private def getPairRDD(articlesLines: RDD[String]) = {
     articlesLines.map { line =>
       val splitLine = line.split("\t")
       try {
-        val wikiTitle = splitLine(0)
-        val articleText = splitLine(1)
+        // id, title, redirect, text
+        val wikiTitle = splitLine(1)
+        val articleText = splitLine(3).replace("\\\\n", "\n").replace("\\\\t", "\t")
         (wikiTitle, articleText)
       } catch {
         case _: Exception => ("", "")
@@ -45,16 +46,16 @@ class Word2VecCorpus(pathToReadableWiki: String, redirectStore: RedirectStore, p
   }
 
   /*
-  *  Clean the articles (wikimedia markup)
+  *  Clean the articles (MediaWiki markup)
   * */
   private def cleanArticles(titleArticleText: RDD[(String, String)]) = {
 
     titleArticleText.map {
       case (title, text) =>
-        // Removes all of the Wikimedia boilerplate, so we can get only the article's text
+        // Removes all of the MediaWiki boilerplate, so we can get only the article's text
         val wikiModel = new EnglishWikipediaPage()
 
-        // cleans wikimedia markup
+        // cleans MediaWiki markup
         val pageContent = WikipediaPage.readPage(wikiModel, text)
 
         // cleans further Style tags {| some CSS inside |}
@@ -72,16 +73,10 @@ class Word2VecCorpus(pathToReadableWiki: String, redirectStore: RedirectStore, p
   }
 
   /**
-   * Replaces links to wikipedia  articles following the format:
-   * `[[Wikipedia Title]]` and `[[Wikipedia Title | anchor]]`
+   * Replaces links to wikipedia articles following the format:
    *
-   * for:
-   * DBPEDIA_ID/Wikipedia_Title <Space> Wikipedia Title
-   *
-   * or:
-   *
-   * DBPEDIA_ID/Wikipedia_Title <Space> anchor
-   *
+   * `[[Wikipedia Title]]` =>  w:Wikipedia_Title <Space> Wikipedia Title
+   * `[[Wikipedia Title | anchor]]` => w:Wikipedia_Title <Space> anchor
    **/
   private def replaceLinksForIds(titleArticleText: RDD[(String, String)], redirectStore: RedirectStore) = {
 
@@ -92,7 +87,7 @@ class Word2VecCorpus(pathToReadableWiki: String, redirectStore: RedirectStore, p
       // Avoiding serializing this for spark..
       " " + prefix + dbpdiaId + " " + anchorText + " "
     }
-    // replaces {{linkToWikipediaARticle}} =>  DBPEDIA_ID/wikiPediaTitle
+    // replaces {{Wikipedia Title}} => w:Wikipedia_Title
     val redirectStore_local = redirectStoreBC.value
     titleArticleText.map { case (title, text) =>
       (title, ArticleCleaner.replaceLinks(text, replace, redirectStore_local))

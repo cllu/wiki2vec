@@ -2,9 +2,12 @@
 
 Utilities for creating Word2Vec vectors for Dbpedia Entities via a Wikipedia Dump.
 
-Within the release of [Word2Vec](http://code.google.com/p/word2vec/) the Google team released vectors for freebase entities trained on the Wikipedia. These vectors are useful for a variety of tasks.
+Within the release of [Word2Vec](http://code.google.com/p/word2vec/) 
+the Google team released vectors for freebase entities trained on the Wikipedia. 
+These vectors are useful for a variety of tasks.
 
-This Tool will allow you to generate those vectors. Instead of `mids` entities will be addressed via `DbpediaIds` which correspond to wikipedia article's titles.
+This Tool will allow you to generate those vectors. 
+Instead of `mids` entities will be addressed via `DbpediaIds` which correspond to wikipedia article's titles.
 Vectors are generated for (i) words appearing inside wikipedia (ii) vectors for topics i.e: `dbpedia/Barack_Obama`.
 
  
@@ -13,10 +16,8 @@ Vectors are generated for (i) words appearing inside wikipedia (ii) vectors for 
 - Requires Java, sbt
 - Run `sbt assembly` to create a fat-jar `target/scala-2.10/wiki2vec-assembly-1.0.jar`
 - Download Wikipedia article dump `multistreaming-xml.bz2`, put it under `data` folder
-- Run the following to create a file with one line per article:
-
-    java -Xmx10G -Xms10G -cp wiki2vec-assembly-1.0.jar org.idio.wikipedia.dumps.CreateReadableWiki ./enwiki-20150205-pages-articles-multistream.xml.bz2 corpus
-    
+- Use `com.chunlianglyu.bliki2:bliki2` to create a Wikipedia tsv dump,
+  each line in the format of `id`, `title`, `redirect`, `text` separated by TAB
 - Run the following to process the generated file using Spark, this will stem and tokenize article contents
 
     ./spark-1.2.0-bin-hadoop2.4/bin/spark-submit --class "org.idio.wikipedia.word2vec.Word2VecCorpus" wiki2vec-assembly-1.0.jar /gds/cllu/workspace/wiki2vec/ReadableWiki fakeRedirectFile /gds/cllu/workspace/wiki2vec/corpus
@@ -25,23 +26,6 @@ Vectors are generated for (i) words appearing inside wikipedia (ii) vectors for 
 The generated corpus file is around 21G.
 
 Then you can feed the corpus file to standard word2vec program.
-
-### Readable Wikipedia
-
-Wikipedia dumps are stored in xml format. This is a difficult format to process in parallel because the  xml file has to be streamed getting the articles on the go.
-A Readable wikipedia Dump is a transformation of the dump such that it is easy to pipeline into tools such as Spark or Hadoop.
-
-Every line in a readable wikipedia dump follows the format:
-`Dbpedia Title` `<tab>` `Article's Text`
-
-The class `org.idio.wikipedia.dumps.ReadableWiki` gets a `multistreaming-xml.bz2`wikipedia dump and outputs a readable wikipedia.
-
-params:
- - path to wikipedia dump
- - path to output readable wikipedia
-i.e:
-
-`java -Xmx10G -Xms10G -cp org.idio.wikipedia.dumps.ReadableWiki wiki2vec-assembly-1.0.jar path-to-wiki-dump/eswiki-20150105-pages-articles-multistream.xml.bz2 pathTo/output/ReadableWikipedia`
 
 
 ### Word2Vec Corpus
