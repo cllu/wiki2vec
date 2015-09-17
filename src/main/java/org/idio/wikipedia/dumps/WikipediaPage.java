@@ -21,14 +21,6 @@ import java.util.regex.Pattern;
 public abstract class WikipediaPage {
   public String page;
   protected String title;
-  protected String mId;
-  protected int textStart;
-  protected int textEnd;
-  protected boolean isRedirect;
-  protected boolean isDisambig;
-  protected boolean isStub;
-  protected boolean isArticle;
-  protected String language;
 
   private WikiModel wikiModel;
   private PlainTextConverter textConverter;
@@ -39,32 +31,6 @@ public abstract class WikipediaPage {
   public WikipediaPage() {
     wikiModel = new WikiModel("", "");
     textConverter = new PlainTextConverter();
-  }
-
-  /**
-   * Deserializes this object.
-   */
-  public void write(DataOutput out) throws IOException {
-    byte[] bytes = page.getBytes("UTF-8");
-    WritableUtils.writeVInt(out, bytes.length);
-    out.write(bytes, 0, bytes.length);
-    out.writeUTF(language == null ? "unk" : language);
-  }
-
-  /**
-   * Returns the article title (i.e., the docid).
-   */
-  public String getDocid() {
-    return mId;
-  }
-
-  @Deprecated
-  public void setLanguage(String language) {
-    this.language = language;
-  }
-
-  public String getLanguage() {
-    return this.language;
   }
 
   // Explicitly remove <ref>...</ref>, because there are screwy things like this:
@@ -117,56 +83,6 @@ public abstract class WikipediaPage {
    */
   public String getTitle() {
     return title;
-  }
-
-  /**
-   * Checks to see if this page is a disambiguation page. A <code>WikipediaPage</code> is either an
-   * article, a disambiguation page, a redirect page, or an empty page.
-   *
-   * @return <code>true</code> if this page is a disambiguation page
-   */
-  public boolean isDisambiguation() {
-    return isDisambig;
-  }
-
-  /**
-   * Checks to see if this page is a redirect page. A <code>WikipediaPage</code> is either an
-   * article, a disambiguation page, a redirect page, or an empty page.
-   *
-   * @return <code>true</code> if this page is a redirect page
-   */
-  public boolean isRedirect() {
-    return isRedirect;
-  }
-
-  /**
-   * Checks to see if this page is an empty page. A <code>WikipediaPage</code> is either an article,
-   * a disambiguation page, a redirect page, or an empty page.
-   *
-   * @return <code>true</code> if this page is an empty page
-   */
-  public boolean isEmpty() {
-    return textStart == -1;
-  }
-
-  /**
-   * Checks to see if this article is a stub. Return value is only meaningful if this page isn't a
-   * disambiguation page, a redirect page, or an empty page.
-   *
-   * @return <code>true</code> if this article is a stub
-   */
-  public boolean isStub() {
-    return isStub;
-  }
-
-  /**
-   * Checks to see if this page lives in the main/article namespace, and not, for example, "File:",
-   * "Category:", "Wikipedia:", etc.
-   *
-   * @return <code>true</code> if this page is an actual article
-   */
-  public boolean isArticle() {
-    return isArticle;
   }
 
   public static class Link {
@@ -249,16 +165,6 @@ public abstract class WikipediaPage {
     }
 
     return links;
-  }
-
-  public List<String> extractLinkTargets() {
-    return Lists.transform(extractLinks(), new Function<Link, String>() {
-      @Override
-      @Nullable
-      public String apply(@Nullable Link link) {
-        return link.getTarget();
-      }
-    });
   }
 
   /**

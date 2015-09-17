@@ -10,20 +10,19 @@ object ArticleCleaner {
    * Parses a WikiLink in MediaWiki's format
    * Returns a pair (Surface Form, DbpediaID)
    */
-  def parseWikimediaLink(matchedLink: String): (String, String) = {
+  def parseWikiLink(matchedLink: String): (String, String) = {
 
     val split = matchedLink.replace( """[[""", "").replace( """]]""", "").split( """\|""").toList
 
     // [[ Dbpedia Title]]
     if (split.length == 1) {
-      val surfaceForm = split(0).trim()
+      val surfaceForm = split.head.trim()
       val dbpediaId = surfaceForm.replace(" ", "_")
       (surfaceForm, dbpediaId)
-    }
-    else {
+    } else {
       // [[Dbpedia Title | anchor]]
       val surfaceForm = split.toList.last.trim()
-      val dbpediaId = split(0).trim().replace(" ", "_")
+      val dbpediaId = split.head.trim().replace(" ", "_")
       (surfaceForm, dbpediaId)
     }
 
@@ -41,7 +40,7 @@ object ArticleCleaner {
 
     linksRegex.replaceAllIn(quoteReplacement(text), linkMatch => {
       try {
-        val (surfaceForm, dbpediaId) = parseWikimediaLink(linkMatch.toString())
+        val (surfaceForm, dbpediaId) = parseWikiLink(linkMatch.toString())
         val canonicalDbpediaId = redirectStore.getCanonicalId(dbpediaId)
         processLink(surfaceForm, canonicalDbpediaId)
       } catch {
