@@ -19,56 +19,6 @@ import java.util.regex.Pattern;
  * A page from Wikipedia.
  */
 public abstract class WikipediaPage {
-  /**
-   * Start delimiter of the page, which is &lt;<code>page</code>&gt;.
-   */
-  public static final String XML_START_TAG = "<page>";
-
-  /**
-   * End delimiter of the page, which is &lt;<code>/page</code>&gt;.
-   */
-  public static final String XML_END_TAG = "</page>";
-
-  /**
-   * Start delimiter of the title, which is &lt;<code>title</code>&gt;.
-   */
-  protected static final String XML_START_TAG_TITLE = "<title>";
-
-  /**
-   * End delimiter of the title, which is &lt;<code>/title</code>&gt;.
-   */
-  protected static final String XML_END_TAG_TITLE = "</title>";
-
-  /**
-   * Start delimiter of the namespace, which is &lt;<code>ns</code>&gt;.
-   */
-  protected static final String XML_START_TAG_NAMESPACE = "<ns>";
-
-  /**
-   * End delimiter of the namespace, which is &lt;<code>/ns</code>&gt;.
-   */
-  protected static final String XML_END_TAG_NAMESPACE = "</ns>";
-
-  /**
-   * Start delimiter of the id, which is &lt;<code>id</code>&gt;.
-   */
-  protected static final String XML_START_TAG_ID = "<id>";
-
-  /**
-   * End delimiter of the id, which is &lt;<code>/id</code>&gt;.
-   */
-  protected static final String XML_END_TAG_ID = "</id>";
-
-  /**
-   * Start delimiter of the text, which is &lt;<code>text xml:space=\"preserve\"</code>&gt;.
-   */
-  protected static final String XML_START_TAG_TEXT = "<text xml:space=\"preserve\">";
-
-  /**
-   * End delimiter of the text, which is &lt;<code>/text</code>&gt;.
-   */
-  protected static final String XML_END_TAG_TEXT = "</text>";
-
   public String page;
   protected String title;
   protected String mId;
@@ -99,17 +49,6 @@ public abstract class WikipediaPage {
     WritableUtils.writeVInt(out, bytes.length);
     out.write(bytes, 0, bytes.length);
     out.writeUTF(language == null ? "unk" : language);
-  }
-
-  /**
-   * Serializes this object.
-   */
-  public void readFields(DataInput in) throws IOException {
-    int length = WritableUtils.readVInt(in);
-    byte[] bytes = new byte[length];
-    in.readFully(bytes, 0, length);
-    WikipediaPage.readPage(this, new String(bytes, "UTF-8"));
-    language = in.readUTF();
   }
 
   /**
@@ -173,38 +112,6 @@ public abstract class WikipediaPage {
     return s;
   }
 
-  public String getDisplayContent() {
-    wikiModel.setUp();
-    String s = "<h1>" + getTitle() + "</h1>\n" + wikiModel.render(getWikiMarkup());
-    wikiModel.tearDown();
-
-    s = DOUBLE_CURLY.matcher(s).replaceAll(" ");
-
-    return s;
-  }
-
-
-  public String getDisplayContentType() {
-    return "text/html";
-  }
-
-  /**
-   * Returns the raw XML of this page.
-   */
-  public String getRawXML() {
-    return page;
-  }
-
-  /**
-   * Returns the text of this page.
-   */
-  public String getWikiMarkup() {
-    if (textStart == -1)
-      return null;
-
-    return page.substring(textStart + 27, textEnd);
-  }
-
   /**
    * Returns the title of this page.
    */
@@ -260,42 +167,6 @@ public abstract class WikipediaPage {
    */
   public boolean isArticle() {
     return isArticle;
-  }
-
-  /**
-   * Returns the inter-language link to a specific language (if any).
-   *
-   * @param lang language
-   * @return title of the article in the foreign language if link exists, <code>null</code>
-   * otherwise
-   */
-  public String findInterlanguageLink(String lang) {
-    int start = page.indexOf("[[" + lang + ":");
-
-    if (start < 0)
-      return null;
-
-    int end = page.indexOf("]]", start);
-
-    if (end < 0)
-      return null;
-
-    // Some pages have malformed links. For example, "[[de:Frances Willard]"
-    // in enwiki-20081008-pages-articles.xml.bz2 has only one closing square
-    // bracket. Temporary solution is to ignore malformed links (instead of
-    // trying to hack around them).
-    String link = page.substring(start + 3 + lang.length(), end);
-
-    // If a newline is found, it probably means that the link is malformed
-    // (see above comment). Abort in this case.
-    if (link.indexOf("\n") != -1) {
-      return null;
-    }
-
-    if (link.length() == 0)
-      return null;
-
-    return link;
   }
 
   public static class Link {
@@ -401,11 +272,4 @@ public abstract class WikipediaPage {
     return page.getContent();
   }
 
-  /**
-   * Reads a raw XML string into a <code>WikipediaPage</code> object. Added for backwards
-   * compability.
-   *
-   * @param s raw XML string
-   */
-  protected abstract void processPage(String s);
 }

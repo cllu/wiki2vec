@@ -27,6 +27,7 @@ public class EnglishWikipediaPage extends WikipediaPage {
     super();
   }
 
+  /*
   @Override
   protected void processPage(String s) {
     this.language = LANGUAGE_CODE;
@@ -59,4 +60,5 @@ public class EnglishWikipediaPage extends WikipediaPage {
     this.isStub = s.indexOf(IDENTIFIER_STUB_TEMPLATE, this.textStart) != -1 ||
       s.indexOf(IDENTIFIER_STUB_WIKIPEDIA_NAMESPACE) != -1;
   }
+  */
 }
